@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".BrandstofDetailsFragment">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="5dp"
+        android:padding="5dp"
+        tools:ignore="UselessParent">
+
+        <TextView
+            android:id="@+id/labelNaam"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/naam" />
+
+        <TextView
+            android:id="@+id/tvNaam"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@+id/labelNaam" />
+
+        <TextView
+            android:id="@+id/labelAdres"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/labelNaam"
+            android:text="@string/adres" />
+
+        <TextView
+            android:id="@+id/tvAdres"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tvNaam"
+            android:layout_toEndOf="@+id/labelAdres" />
+
+        <TextView
+            android:id="@+id/labelLocatie"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/labelAdres"
+            android:text="@string/locatie" />
+
+        <TextView
+            android:id="@+id/tvLocatie"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tvAdres"
+            android:layout_toEndOf="@+id/labelLocatie" />
+
+
+        <TextView
+            android:id="@+id/labelPrijs"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/labelLocatie"
+            android:text="@string/prijs" />
+
+        <TextView
+            android:id="@+id/tvPrijs"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tvLocatie"
+            android:layout_toEndOf="@+id/labelPrijs" />
+
+        <TextView
+            android:id="@+id/labelDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/labelPrijs"
+            android:text="@string/laatst_bijgewerkt" />
+
+        <TextView
+            android:id="@+id/tvDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tvPrijs"
+            android:layout_toEndOf="@+id/labelDate" />
+
+    </RelativeLayout>
+
+</FrameLayout>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp"
+    tools:context=".BrandstofActivity">
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/brandstofDetailsFragment"
+        android:name="com.example.brandstofprijzen.BrandstofDetailsFragment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:layout="@layout/fragment_brandstof_details" />
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="15dp"/>
+
+<!--    <Spinner-->
+<!--        android:id="@+id/spinnerSort"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="48dp" />-->
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="15dp" />
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/brandstofListFragment"
+        android:name="com.example.brandstofprijzen.ListFragment"
+        android:layout_width="match_parent"
+        android:layout_height="573dp"
+        tools:layout="@layout/fragment_list" />
+
+</LinearLayout>
