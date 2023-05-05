@@ -10,8 +10,10 @@ import android.widget.ArrayAdapter
 import android.widget.ListView
 import com.example.brandstofprijzen.model.Tankstation
 import com.example.brandstofprijzen.model.Locatie
+import io.github.cdimascio.dotenv.dotenv
 import kotlinx.coroutines.*
 import org.json.JSONObject
+
 import java.net.URL
 
 class ListFragment : Fragment() {
@@ -82,7 +84,11 @@ class ListFragment : Fragment() {
     }
 
     private suspend fun parseFuelData(identifier: String): Tankstation = withContext(Dispatchers.IO) {
-        val apiKey = "GttEkIuzzOn4b0sGyPw2F6cLtzd64uUH"
+        val dotenv = dotenv {
+            directory = "/assets"
+            filename = "env" // instead of '.env', use 'env'
+        }
+        val apiKey = dotenv["API_KEY"]
         val url = "https://api.anwb.nl/v2/pois/fuel/$identifier?apikey=$apiKey"
         val response = URL(url).readText()
 
