@@ -8,7 +8,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.ListView
-import com.example.brandstofprijzen.model.Brandstof
+import com.example.brandstofprijzen.model.Tankstation
+import com.example.brandstofprijzen.model.Locatie
 import kotlinx.coroutines.*
 import org.json.JSONObject
 import java.net.URL
@@ -16,7 +17,7 @@ import java.net.URL
 class ListFragment : Fragment() {
 
     private lateinit var listView: ListView
-    private lateinit var adapter: ArrayAdapter<Brandstof>
+    private lateinit var adapter: ArrayAdapter<Tankstation>
     private val tankStations = mapOf(
         "Argos - Sprang-Capelle" to "3430",
         "Tango - Kaatsheuvel" to "11465",
@@ -46,9 +47,9 @@ class ListFragment : Fragment() {
         listView.adapter = adapter
 
         listView.setOnItemClickListener { parent, _, position, _ ->
-            val b = parent.getItemAtPosition(position) as Brandstof
+            val b = parent.getItemAtPosition(position) as Tankstation
             parentFragmentManager.findFragmentById(R.id.brandstofDetailsFragment)?.let {
-                (it as? BrandstofDetailsFragment)?.fillInfo(b)
+                (it as? BrandstofDetailsFragment)?.fillInfo(b, selectedFuel)
             }
         }
 
@@ -58,54 +59,59 @@ class ListFragment : Fragment() {
     }
 
     private fun fillListView(selectedFuel: String) {
-        val brandstofList = ArrayList<Brandstof>()
+        val tankstationList = ArrayList<Tankstation>()
         val scope = CoroutineScope(Dispatchers.Main)
 
         // Launch coroutines for each tank station and collect the results in a list
         val deferredList = tankStations.map { (name, id) ->
             scope.async(Dispatchers.IO) {
-                parseFuelData(selectedFuel, id)
+                parseFuelData(id)
             }
         }
 
         // Wait for all coroutines to complete and add the results to the list
         scope.launch {
-            deferredList.awaitAll().forEach { brandstofList.add(it) }
+            deferredList.awaitAll().forEach { tankstationList.add(it) }
 
-            brandstofList.sortWith(compareBy { it.prijs.substring(1).toDouble() })
+            tankstationList.sortWith(compareBy { it.prijs[selectedFuel]?.substring(1)?.toDouble() })
 
             // Update the adapter with the collected data
-            adapter.addAll(brandstofList)
+            adapter.addAll(tankstationList)
             adapter.notifyDataSetChanged()
         }
     }
 
-
-    private suspend fun parseFuelData(selectedFuel: String, identifier: String): Brandstof = withContext(Dispatchers.IO) {
+    private suspend fun parseFuelData(identifier: String): Tankstation = withContext(Dispatchers.IO) {
         val apiKey = "GttEkIuzzOn4b0sGyPw2F6cLtzd64uUH"
         val url = "https://api.anwb.nl/v2/pois/fuel/$identifier?apikey=$apiKey"
         val response = URL(url).readText()
 
         val data = JSONObject(response)
         val displayName = data.getString("displayName")
+
+        // Adres gegevens
         val locality = data.getJSONObject("address").getString("addressLocality")
         val adres = data.getJSONObject("address").getString("streetAddress")
+        val longitude = data.getJSONObject("geo").getString("longitude").toDouble()
+        val latitude = data.getJSONObject("geo").getString("latitude").toDouble()
 
         val fuels = data.getJSONArray("fuels")
-        var dieselValue = ""
-        var checkedDate = ""
+        val prices = mutableMapOf<String, String>()
+        val datums = mutableMapOf<String, String>()
+
         for (i in 0 until fuels.length()) {
             val fuel = fuels.getJSONObject(i)
-            if (fuel.getString("name") == selectedFuel) {
-                dieselValue = fuel.getJSONObject("price").getString("value")
-                dieselValue = "€${dieselValue.substring(0, 1)}.${dieselValue.substring(1)}"
-                checkedDate = fuel.getString("recordDate")
-                break
-            }
+
+            val value = fuel.getJSONObject("price").getString("value")
+            val formattedValue = "€${value.substring(0, 1)}.${value.substring(1)}"
+
+            val fuelType = fuel.getString("type")
+            datums[fuelType] = fuel.getString("recordDate")
+            prices[fuelType] = formattedValue
         }
 
-        Brandstof(displayName, locality, adres, dieselValue, checkedDate)
+        val locatie = Locatie(adres, locality, longitude, latitude)
+
+        Tankstation(Integer.parseInt(identifier), displayName, locatie, prices, datums)
     }
-
-
 }
