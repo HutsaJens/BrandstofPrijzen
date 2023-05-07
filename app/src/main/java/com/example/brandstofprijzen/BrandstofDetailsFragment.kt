@@ -38,7 +38,6 @@ class BrandstofDetailsFragment : Fragment() {
         }
 
         view.findViewById<TextView>(R.id.tvPrijs).text = tankstation.prijs[fuelType]
-        view.findViewById<TextView>(R.id.tvDate).text = tankstation.checkDate[fuelType]
+        view.findViewById<TextView>(R.id.tvDate).text = tankstation.getFormattedCheckDate()["Diesel"]
     }
-
 }

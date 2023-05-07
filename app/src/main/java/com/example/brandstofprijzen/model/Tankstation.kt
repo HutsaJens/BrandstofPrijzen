@@ -1,5 +1,9 @@
 package com.example.brandstofprijzen.model
 
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+
+
 data class Tankstation(
     val id: Int,
     val naam: String,
@@ -9,5 +13,14 @@ data class Tankstation(
 ) {
     override fun toString(): String {
         return "$naam - ${locatie.locatie}: $prijs"
+    }
+
+    fun getFormattedCheckDate(dateFormat: String = "dd-MM-yyyy"): Map<String, String> {
+        val formattedCheckDate = mutableMapOf<String, String>()
+        for ((key, value) in checkDate) {
+            val parsedDate = LocalDate.parse(value)
+            formattedCheckDate[key] = parsedDate.format(DateTimeFormatter.ofPattern(dateFormat))
+        }
+        return formattedCheckDate
     }
 }
