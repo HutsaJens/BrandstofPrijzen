@@ -13,11 +13,7 @@ class BrandstofDetailsFragment : Fragment() {
 
     private lateinit var view: View
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         // Inflate the layout for this fragment
         view = inflater.inflate(R.layout.fragment_brandstof_details, container, false)
         return view
@@ -31,10 +27,10 @@ class BrandstofDetailsFragment : Fragment() {
         val fuelTypeArray = arrayOf("Diesel (B7)", "Euro 95 (E10)", "Super Plus 98 (E5)", "LPG")
 
         val fuelType = when (selectedFuel) {
-            fuelTypeArray[1] -> "euro95"
-            fuelTypeArray[2] -> "euro98"
-            fuelTypeArray[3] -> "autogas"
-            else -> "diesel"
+            fuelTypeArray[1] -> "Euro 95 (E10)"
+            fuelTypeArray[2] -> "Super Plus 98 (E5)"
+            fuelTypeArray[3] -> "LPG"
+            else -> "Diesel (B7)"
         }
 
         view.findViewById<TextView>(R.id.tvPrijs).text = tankstation.prijs[fuelType]

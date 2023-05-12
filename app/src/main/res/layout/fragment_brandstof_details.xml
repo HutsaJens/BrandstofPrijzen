@@ -14,57 +14,65 @@
 
         <TextView
             android:id="@+id/labelNaam"
-            android:layout_width="wrap_content"
+            android:layout_width="75dp"
             android:layout_height="wrap_content"
-            android:text="@string/naam" />
+            android:text="Naam: "
+            android:textSize="20sp" />
 
         <TextView
             android:id="@+id/tvNaam"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textSize="20sp"
             android:layout_toEndOf="@+id/labelNaam" />
 
         <TextView
             android:id="@+id/labelAdres"
-            android:layout_width="wrap_content"
+            android:layout_width="75dp"
             android:layout_height="wrap_content"
+            android:textSize="20sp"
             android:layout_below="@+id/labelNaam"
-            android:text="@string/adres" />
+            android:text="Adres: " />
 
         <TextView
             android:id="@+id/tvAdres"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/tvNaam"
+            android:textSize="20sp"
             android:layout_toEndOf="@+id/labelAdres" />
 
         <TextView
             android:id="@+id/labelLocatie"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textSize="20sp"
             android:layout_below="@+id/labelAdres"
-            android:text="@string/locatie" />
+            android:text="Locatie: " />
 
         <TextView
             android:id="@+id/tvLocatie"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/tvAdres"
+            android:textSize="20sp"
             android:layout_toEndOf="@+id/labelLocatie" />
 
 
         <TextView
             android:id="@+id/labelPrijs"
-            android:layout_width="wrap_content"
+            android:layout_width="75dp"
             android:layout_height="wrap_content"
+            android:textSize="20sp"
             android:layout_below="@+id/labelLocatie"
-            android:text="@string/prijs" />
+            android:text="Prijs: " />
 
         <TextView
             android:id="@+id/tvPrijs"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/tvLocatie"
+            android:textSize="20sp"
             android:layout_toEndOf="@+id/labelPrijs" />
 
         <TextView
@@ -72,13 +80,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/labelPrijs"
-            android:text="@string/laatst_bijgewerkt" />
+            android:textSize="20sp"
+            android:text="Laatst Bijgewerkt: " />
 
         <TextView
             android:id="@+id/tvDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/tvPrijs"
+            android:textSize="20sp"
             android:layout_toEndOf="@+id/labelDate" />
 
     </RelativeLayout>

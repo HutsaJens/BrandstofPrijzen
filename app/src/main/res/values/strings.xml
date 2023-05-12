@@ -2,11 +2,11 @@
 
 
     <string name="app_name">BrandstofPrijzen</string>
-    <string name="naam">Naam:</string>
-    <string name="adres" tools:ignore="Typos">Adres:</string>
-    <string name="locatie">Locatie:</string>
-    <string name="prijs">Prijs:</string>
-    <string name="laatst_bijgewerkt">Laatst bijgewerkt:</string>
+    <string name="naam">Naam: </string>
+    <string name="adres" tools:ignore="Typos">Adres: </string>
+    <string name="locatie">Locatie: </string>
+    <string name="prijs">Prijs: </string>
+    <string name="laatst_bijgewerkt">Laatst bijgewerkt: </string>
     <string name="zoek_tankstations">Zoek tankstations</string>
 
 

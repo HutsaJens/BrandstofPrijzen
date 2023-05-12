@@ -27,14 +27,14 @@ class MainActivity : AppCompatActivity() {
         val dbCreated = prefs.getBoolean(DB_CREATED_KEY, false)
 
         // This will call onCreate if the database doesn't exist
-        if (!dbCreated) {
-            // Create the database
-            val dbHelper = DatabaseHelper(this)
-            dbHelper.writableDatabase
-
-            // Save the flag indicating that the database has been created
-            prefs.edit().putBoolean(DB_CREATED_KEY, true).apply()
-        }
+//        if (!dbCreated) {
+//            // Create the database
+//            val dbHelper = DatabaseHelper(this)
+//            dbHelper.writableDatabase
+//
+//            // Save the flag indicating that the database has been created
+//            prefs.edit().putBoolean(DB_CREATED_KEY, true).apply()
+//        }
 
         val spinner: Spinner = findViewById(R.id.spinner)
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, fuelTypeArray)

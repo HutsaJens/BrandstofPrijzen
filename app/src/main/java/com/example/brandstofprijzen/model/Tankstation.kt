@@ -12,7 +12,11 @@ data class Tankstation(
     val prijs: Map<String, String>
 ) {
     override fun toString(): String {
-        return "$naam - ${locatie.locatie}: $prijs"
+        return "$naam - ${locatie.locatie}: ${prijs.values.firstOrNull() ?: ""}"
+    }
+
+    fun toString(selectedFuel: String): String {
+        return "$naam - ${locatie.locatie}: ${prijs[selectedFuel] ?: ""}"
     }
 
     fun getFormattedCheckDate(dateFormat: String = "dd-MM-yyyy"): Map<String, String> {

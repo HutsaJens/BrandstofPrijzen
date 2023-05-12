@@ -1,6 +1,5 @@
 package com.example.brandstofprijzen
 
-import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -16,9 +15,8 @@ import kotlinx.coroutines.*
 import org.json.JSONObject
 
 import java.net.URL
-import java.text.SimpleDateFormat
-import java.util.*
-import kotlin.collections.ArrayList
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 class ListFragment : Fragment() {
 
@@ -35,12 +33,13 @@ class ListFragment : Fragment() {
         "Shell Beerens - Sprang-Capelle" to "3483")
 
 
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
 
         // Retrieve the selected fuel string from the arguments bundle
         val selectedFuel = arguments?.getString("selectedFuel")
         if (selectedFuel != null) {
-            Log.i("SelectedView", selectedFuel)
+            Log.e("SelectedView", selectedFuel)
         }
 
 
@@ -58,7 +57,6 @@ class ListFragment : Fragment() {
             }
         }
 
-        // Call the method that fills the list view with data
         selectedFuel?.let { fillListView(it) }
 
         return view
@@ -75,26 +73,23 @@ class ListFragment : Fragment() {
             }
         }
 
+
+
         // Wait for all coroutines to complete and add the results to the list
         scope.launch {
-            deferredList.awaitAll().forEach { tankstationList.add(it) }
+            try {
+                deferredList.awaitAll().forEach { tankstationList.add(it) }
+                tankstationList.sortWith(compareBy { it.prijs[selectedFuel]?.substring(1)?.toDouble() })
 
-            // Sort the tank stations based on the selected fuel price
-            tankstationList.sortWith(compareBy { it.prijs[selectedFuel]?.substring(1)?.toDouble() })
+                // Filter out stations where the selected fuel price is null
+                val filteredList = tankstationList.filter { it.prijs[selectedFuel]?.isNotBlank() == true }
 
-            // Update the adapter with the collected data
-            adapter.addAll(tankstationList)
-            adapter.notifyDataSetChanged()
-
-            // Get the current date in yyyy-mm-dd format
-            val currentDate = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date())
-
-            // Iterate through the list view items and set the color of the item to orange if the date does not match the current date
-            for (i in 0 until listView.count) {
-                val tankstation = adapter.getItem(i) as Tankstation
-                if (tankstation.checkDate[selectedFuel] != currentDate) {
-                    listView.getChildAt(i)?.setBackgroundColor(Color.parseColor("#FFA500"))
-                }
+                // Update the adapter with the filtered data
+                adapter.clear()
+                adapter.addAll(filteredList)
+                adapter.notifyDataSetChanged()
+            } catch (e: Exception) {
+                Log.e("fillListView", "Error in coroutine", e)
             }
         }
     }
@@ -124,16 +119,24 @@ class ListFragment : Fragment() {
         for (i in 0 until fuels.length()) {
             val fuel = fuels.getJSONObject(i)
 
+            val fuelType = fuel.getString("name")
+            if (fuel.has("recordDate")) {
+                val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
+                val date = LocalDate.parse(fuel.getString("recordDate"))
+                datums[fuelType] = date.format(formatter)
+            } else {
+                datums[fuelType] = "Onbekend"
+            }
+
+
+
             val value = fuel.getJSONObject("price").getString("value")
             val formattedValue = "€${value.substring(0, 1)}.${value.substring(1)}"
-
-            val fuelType = fuel.getString("type")
-            datums[fuelType] = fuel.getString("recordDate")
             prices[fuelType] = formattedValue
         }
 
         val locatie = Locatie(adres, locality, longitude, latitude)
 
-        Tankstation(Integer.parseInt(identifier), displayName, locatie, prices, datums)
+        Tankstation(Integer.parseInt(identifier), displayName, locatie, datums, prices)
     }
 }
