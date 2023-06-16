@@ -1,5 +1,6 @@
 package com.example.brandstofprijzen
 
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -8,30 +9,28 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.ListView
+import android.widget.TextView
+import com.example.brandstofprijzen.adapter.TankstationListAdapter
+import com.example.brandstofprijzen.apis.AnwbApiTankstationsFull
 import com.example.brandstofprijzen.model.Tankstation
-import com.example.brandstofprijzen.model.Locatie
-import io.github.cdimascio.dotenv.dotenv
 import kotlinx.coroutines.*
-import org.json.JSONObject
 
-import java.net.URL
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 class ListFragment : Fragment() {
 
     private lateinit var listView: ListView
     private lateinit var adapter: ArrayAdapter<Tankstation>
-    private val tankStations = mapOf(
-        "Argos - Sprang-Capelle" to "3430",
-        "Tango - Kaatsheuvel" to "11465",
-        "Tinq - Waalwijk" to "11529",
-        "Texaco - Waalwijk" to "7159",
-        "Esso - A27 Dorst" to "3030",
-        "Argos - Moergestel" to "3719",
-        "Esso - N261 Waalwijk" to "3471",
-        "Shell Beerens - Sprang-Capelle" to "3483")
-
+//    private val tankStations = mapOf(
+//        "Argos - Sprang-Capelle" to "3430",
+//        "Tango - Kaatsheuvel" to "11465",
+//        "Tinq - Waalwijk" to "11529",
+//        "Texaco - Waalwijk" to "7159",
+//        "Esso - A27 Dorst" to "3030",
+//        "Argos - Moergestel" to "3719",
+//        "Esso - N261 Waalwijk" to "3471",
+//        "Shell Beerens - Sprang-Capelle" to "3483"
+//    )
 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -42,12 +41,12 @@ class ListFragment : Fragment() {
             Log.e("SelectedView", selectedFuel)
         }
 
-
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_list, container, false)
         listView = view.findViewById(R.id.lvBrandstof)
 
-        adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1)
+        // Create a new instance of the custom adapter and set it as the adapter for the ListView
+        adapter = TankstationListAdapter(requireContext(), ArrayList(), selectedFuel ?: "")
         listView.adapter = adapter
 
         listView.setOnItemClickListener { parent, _, position, _ ->
@@ -63,80 +62,48 @@ class ListFragment : Fragment() {
     }
 
     private fun fillListView(selectedFuel: String) {
-        val tankstationList = ArrayList<Tankstation>()
         val scope = CoroutineScope(Dispatchers.Main)
 
-        // Launch coroutines for each tank station and collect the results in a list
-        val deferredList = tankStations.map { (name, id) ->
-            scope.async(Dispatchers.IO) {
-                parseFuelData(id)
-            }
-        }
+        val longitude = arguments?.getDouble("longitude")
+        val latitude = arguments?.getDouble("latitude")
 
+        val anwbApiTankstationsFull = AnwbApiTankstationsFull()
 
-
-        // Wait for all coroutines to complete and add the results to the list
         scope.launch {
             try {
-                deferredList.awaitAll().forEach { tankstationList.add(it) }
-                tankstationList.sortWith(compareBy { it.prijs[selectedFuel]?.substring(1)?.toDouble() })
+                val tankstationList = anwbApiTankstationsFull.parseJSON(longitude!!, latitude!!)
+                System.out.println("fillListView() | Tankstation list size: " + tankstationList.size)
 
-                // Filter out stations where the selected fuel price is null
-                val filteredList = tankstationList.filter { it.prijs[selectedFuel]?.isNotBlank() == true }
+                val sortedList = tankstationList.sortedWith(compareBy { it.prijs[selectedFuel]?.substring(1)?.toDouble() ?: 0.0 })
 
+                System.out.println("Prijs: " + tankstationList.get(0).prijs[selectedFuel])
+                val filteredList = sortedList.filter { it.prijs[selectedFuel] != null }
+                    .map {
+                        Tankstation(
+                            it.id,
+                            it.naam,
+                            it.locatie,
+                            it.checkDate,
+                            mapOf(selectedFuel to (it.prijs[selectedFuel] ?: ""))
+                        )
+                    }
+                System.out.println("FilteredList size: " + filteredList.size)
                 // Update the adapter with the filtered data
                 adapter.clear()
                 adapter.addAll(filteredList)
                 adapter.notifyDataSetChanged()
+
+                for (i in 0 until listView.count) {
+                    val item = adapter.getItem(i)
+                    if (item != null && item.checkDate[selectedFuel] != LocalDate.now().toString()) {
+                        val textView = listView.getChildAt(i - listView.firstVisiblePosition)
+                            ?.findViewById<TextView>(android.R.id.text1)
+                        textView?.setTextColor(Color.parseColor("#FFA500"))
+                    }
+                }
             } catch (e: Exception) {
                 Log.e("fillListView", "Error in coroutine", e)
             }
         }
-    }
-
-    private suspend fun parseFuelData(identifier: String): Tankstation = withContext(Dispatchers.IO) {
-        val dotenv = dotenv {
-            directory = "/assets"
-            filename = "env" // instead of '.env', use 'env'
-        }
-        val apiKey = dotenv["API_KEY"]
-        val url = "https://api.anwb.nl/v2/pois/fuel/$identifier?apikey=$apiKey"
-        val response = URL(url).readText()
-
-        val data = JSONObject(response)
-        val displayName = data.getString("displayName")
-
-        // Adres gegevens
-        val locality = data.getJSONObject("address").getString("addressLocality")
-        val adres = data.getJSONObject("address").getString("streetAddress")
-        val longitude = data.getJSONObject("geo").getString("longitude").toDouble()
-        val latitude = data.getJSONObject("geo").getString("latitude").toDouble()
-
-        val fuels = data.getJSONArray("fuels")
-        val prices = mutableMapOf<String, String>()
-        val datums = mutableMapOf<String, String>()
-
-        for (i in 0 until fuels.length()) {
-            val fuel = fuels.getJSONObject(i)
-
-            val fuelType = fuel.getString("name")
-            if (fuel.has("recordDate")) {
-                val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
-                val date = LocalDate.parse(fuel.getString("recordDate"))
-                datums[fuelType] = date.format(formatter)
-            } else {
-                datums[fuelType] = "Onbekend"
-            }
-
-
-
-            val value = fuel.getJSONObject("price").getString("value")
-            val formattedValue = "€${value.substring(0, 1)}.${value.substring(1)}"
-            prices[fuelType] = formattedValue
-        }
-
-        val locatie = Locatie(adres, locality, longitude, latitude)
-
-        Tankstation(Integer.parseInt(identifier), displayName, locatie, datums, prices)
     }
 }

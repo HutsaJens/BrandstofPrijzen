@@ -27,5 +27,14 @@
         app:layout_constraintBottom_toTopOf="@+id/button_hoppa"
         app:layout_constraintEnd_toEndOf="@+id/button_hoppa" />
 
+<!--    <SearchView-->
+<!--        android:id="@+id/editTextTextPostalAddress"-->
+<!--        android:layout_width="250dp"-->
+<!--        android:layout_height="53dp"-->
+<!--        android:ems="10"-->
+<!--        android:inputType="textPostalAddress"-->
+<!--        app:layout_constraintBottom_toTopOf="@+id/spinner"-->
+<!--        app:layout_constraintEnd_toEndOf="@+id/spinner" />-->
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
