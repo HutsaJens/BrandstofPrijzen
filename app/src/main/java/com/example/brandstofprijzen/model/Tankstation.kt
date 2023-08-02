@@ -1,7 +1,7 @@
 package com.example.brandstofprijzen.model
 
 data class Tankstation(
-    val id: Int,
+    val id: String,
     val naam: String,
     val locatie: Locatie,
     val checkDate: Map<String, String>,

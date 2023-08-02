@@ -9,4 +9,9 @@
     <string name="laatst_bijgewerkt">Laatst bijgewerkt: </string>
     <string name="zoek_tankstations">Zoek tankstations</string>
 
+    <string name="favButtonString">Opslaan</string>
+    <string name="favButtonStringTwo">Verwijderen</string>
+
+
+
 </resources>

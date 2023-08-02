@@ -12,6 +12,7 @@ import com.example.brandstofprijzen.model.Tankstation
 class BrandstofDetailsFragment : Fragment() {
 
     private lateinit var view: View
+    private var tankstationChosen: Tankstation? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         // Inflate the layout for this fragment
@@ -20,20 +21,27 @@ class BrandstofDetailsFragment : Fragment() {
     }
 
     fun fillInfo(tankstation: Tankstation, selectedFuel: String?) {
+        tankstationChosen = tankstation
         view.findViewById<TextView>(R.id.tvNaam)?.text = tankstation.naam
         view.findViewById<TextView>(R.id.tvLocatie)?.text = tankstation.locatie.locatie
         view.findViewById<TextView>(R.id.tvAdres)?.text = tankstation.locatie.adres
 
-        val fuelTypeArray = arrayOf("Diesel (B7)", "Euro 95 (E10)", "Super Plus 98 (E5)", "LPG")
+        val fuelTypeArray = arrayOf("Diesel (B7)", "Euro 95 (E10)", "Super Plus 98 (E5)", "Premium diesel", "LPG")
 
         val fuelType = when (selectedFuel) {
+            fuelTypeArray[0] -> "Diesel (B7)"
             fuelTypeArray[1] -> "Euro 95 (E10)"
             fuelTypeArray[2] -> "Super Plus 98 (E5)"
-            fuelTypeArray[3] -> "LPG"
+            fuelTypeArray[3] -> "Premium diesel"
+            fuelTypeArray[4] -> "LPG"
             else -> "Diesel (B7)"
         }
 
-        view.findViewById<TextView>(R.id.tvPrijs).text = tankstation.prijs[selectedFuel]
-        view.findViewById<TextView>(R.id.tvDate).text = tankstation.checkDate[selectedFuel]
+        view.findViewById<TextView>(R.id.tvPrijs).text = tankstation.prijs[fuelType]
+        view.findViewById<TextView>(R.id.tvDate).text = tankstation.checkDate[fuelType]
+    }
+
+    fun getSelectedTankstation(): Tankstation? {
+        return tankstationChosen
     }
 }
