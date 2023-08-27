@@ -1,4 +1,4 @@
-package com.example.brandstofprijzen
+package com.example.brandstofprijzen.ui
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
@@ -7,9 +7,8 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
 import android.widget.Toast
-import com.example.brandstofprijzen.util.readFromCacheFile
-import com.example.brandstofprijzen.util.removeFromCacheFile
-import com.example.brandstofprijzen.util.writeToCacheFile
+import com.example.brandstofprijzen.R
+import com.example.brandstofprijzen.util.CacheManager
 
 
 class BrandstofActivity : AppCompatActivity() {
@@ -98,23 +97,26 @@ class BrandstofActivity : AppCompatActivity() {
 
     private fun saveFavorite() {
         val selectedTankstation = brandstofDetailsFragment.getSelectedTankstation()
+        val cacheManager = CacheManager(this)
+
         if (selectedTankstation == null) {
             showToast("Selecteer A.U.B. een tankstation")
             return
         }
         val key: String = selectedTankstation.id
 
-        if(writeToCacheFile(this, key)) {
+        if(cacheManager.writeToCacheFile(key)) {
             showToast("Succesvol opgeslagen")
         } else {
             showToast("Fout tijdens opslaan")
         }
 
-        println(readFromCacheFile(this))
+        println(cacheManager.readFromCacheFile())
 
     }
 
     private fun deleteFavorite() {
+        val cacheManager = CacheManager(this)
         val selectedTankstation = brandstofDetailsFragment.getSelectedTankstation()
         if (selectedTankstation == null) {
             showToast("Selecteer A.U.B. een tankstation")
@@ -122,7 +124,7 @@ class BrandstofActivity : AppCompatActivity() {
         }
         val key: String = selectedTankstation.id
 
-        if(removeFromCacheFile(this, key)) {
+        if(cacheManager.removeFromCacheFile(key)) {
             showToast("Succesvol verwijderd")
         } else {
             showToast("Fout tijdens verwijderen")

@@ -1,4 +1,4 @@
-package com.example.brandstofprijzen
+package com.example.brandstofprijzen.ui
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import com.example.brandstofprijzen.R
 import com.example.brandstofprijzen.model.Tankstation
 
 
@@ -25,20 +26,8 @@ class BrandstofDetailsFragment : Fragment() {
         view.findViewById<TextView>(R.id.tvNaam)?.text = tankstation.naam
         view.findViewById<TextView>(R.id.tvLocatie)?.text = tankstation.locatie.locatie
         view.findViewById<TextView>(R.id.tvAdres)?.text = tankstation.locatie.adres
-
-        val fuelTypeArray = arrayOf("Diesel (B7)", "Euro 95 (E10)", "Super Plus 98 (E5)", "Premium diesel", "LPG")
-
-        val fuelType = when (selectedFuel) {
-            fuelTypeArray[0] -> "Diesel (B7)"
-            fuelTypeArray[1] -> "Euro 95 (E10)"
-            fuelTypeArray[2] -> "Super Plus 98 (E5)"
-            fuelTypeArray[3] -> "Premium diesel"
-            fuelTypeArray[4] -> "LPG"
-            else -> "Diesel (B7)"
-        }
-
-        view.findViewById<TextView>(R.id.tvPrijs).text = tankstation.prijs[fuelType]
-        view.findViewById<TextView>(R.id.tvDate).text = tankstation.checkDate[fuelType]
+        view.findViewById<TextView>(R.id.tvPrijs).text = tankstation.prijs[selectedFuel]
+        view.findViewById<TextView>(R.id.tvDate).text = tankstation.checkDate[selectedFuel]
     }
 
     fun getSelectedTankstation(): Tankstation? {

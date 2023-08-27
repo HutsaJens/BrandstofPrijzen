@@ -1,4 +1,4 @@
-package com.example.brandstofprijzen
+package com.example.brandstofprijzen.ui
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.*
 import androidx.appcompat.app.AppCompatDelegate
+import com.example.brandstofprijzen.R
 import com.example.brandstofprijzen.location.LocationHelper
 import com.example.brandstofprijzen.network.hasNetworkConnection
 
