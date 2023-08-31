@@ -4,7 +4,6 @@ import com.example.brandstofprijzen.model.Bounds
 import kotlin.math.cos
 
 class BoundGenerator() {
-
     fun generateBounds(latitude: Double, longitude: Double, distanceToCornersKm: Double): Bounds {
 
         val degreePerKm = 1.0 / 111.0

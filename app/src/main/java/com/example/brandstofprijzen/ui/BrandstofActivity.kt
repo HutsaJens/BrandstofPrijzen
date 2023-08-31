@@ -6,9 +6,9 @@ import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
-import android.widget.Toast
 import com.example.brandstofprijzen.R
-import com.example.brandstofprijzen.util.CacheManager
+import com.example.brandstofprijzen.data.CacheManager
+import com.example.brandstofprijzen.model.Tankstation
 
 
 class BrandstofActivity : AppCompatActivity() {
@@ -17,6 +17,7 @@ class BrandstofActivity : AppCompatActivity() {
     private var lastKnownLatitude: Double = 0.0
     private var lastKnownLongitude: Double = 0.0
     private var localOnly: Boolean = false
+    private val toastManager: ToastManager = ToastManager(this)
     private lateinit var brandstofDetailsFragment: BrandstofDetailsFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,6 +31,7 @@ class BrandstofActivity : AppCompatActivity() {
         lastKnownLongitude = intent.getDoubleExtra("longitude", 0.0)
         localOnly = intent.getBooleanExtra("local", false)
 
+        brandstofDetailsFragment = BrandstofDetailsFragment()
 
         val buttonMaps = findViewById<Button>(R.id.button_maps)
         buttonMaps.setOnClickListener {
@@ -62,8 +64,6 @@ class BrandstofActivity : AppCompatActivity() {
         bundle.putBoolean("favButtonPressed", favButtonPressed)
         listFragment.arguments = bundle
 
-        brandstofDetailsFragment = BrandstofDetailsFragment()
-
         supportFragmentManager.beginTransaction()
             .replace(R.id.brandstofListFragment, listFragment)
             .replace(R.id.brandstofDetailsFragment, brandstofDetailsFragment)
@@ -75,24 +75,25 @@ class BrandstofActivity : AppCompatActivity() {
     }
 
     private fun openInMaps() {
-        val selectedTankstation = brandstofDetailsFragment.getSelectedTankstation()
+        val selectedTankstation: Tankstation? = brandstofDetailsFragment.getSelectedTankstation()
 
-        if (selectedTankstation != null) {
-            val latitude: String = selectedTankstation.locatie.latitude.toString()
-            val longitude: String = selectedTankstation.locatie.longitude.toString()
-
-            val gmmIntentUri = Uri.parse("geo:$latitude,$longitude?q=$latitude,$longitude")
-            val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
-            mapIntent.setPackage("com.google.android.apps.maps")
-
-            try {
-                startActivity(mapIntent)
-            } catch (e: ActivityNotFoundException) {
-                showToast("Google Maps is niet geïnstalleerd")
-            }
-        } else {
-            showToast("Selecteer A.U.B. een tankstation")
+        if (selectedTankstation == null) {
+            toastManager.showToast("Selecteer A.U.B. een tankstation")
+            return
         }
+        val latitude: String = selectedTankstation.locatie.latitude.toString()
+        val longitude: String = selectedTankstation.locatie.longitude.toString()
+
+        val gmmIntentUri = Uri.parse("geo:$latitude,$longitude?q=$latitude,$longitude")
+        val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+        mapIntent.setPackage("com.google.android.apps.maps")
+
+        try {
+            startActivity(mapIntent)
+        } catch (e: ActivityNotFoundException) {
+            toastManager.showToast("Google Maps is niet geïnstalleerd")
+        }
+
     }
 
     private fun saveFavorite() {
@@ -100,40 +101,33 @@ class BrandstofActivity : AppCompatActivity() {
         val cacheManager = CacheManager(this)
 
         if (selectedTankstation == null) {
-            showToast("Selecteer A.U.B. een tankstation")
+            toastManager.showToast("Selecteer A.U.B. een tankstation")
             return
         }
         val key: String = selectedTankstation.id
 
-        if(cacheManager.writeToCacheFile(key)) {
-            showToast("Succesvol opgeslagen")
+        if (cacheManager.writeToCacheFile(key)) {
+            toastManager.showToast("Succesvol opgeslagen")
         } else {
-            showToast("Fout tijdens opslaan")
+            toastManager.showToast("Fout tijdens opslaan")
         }
 
         println(cacheManager.readFromCacheFile())
-
     }
 
     private fun deleteFavorite() {
         val cacheManager = CacheManager(this)
         val selectedTankstation = brandstofDetailsFragment.getSelectedTankstation()
         if (selectedTankstation == null) {
-            showToast("Selecteer A.U.B. een tankstation")
+            toastManager.showToast("Selecteer A.U.B. een tankstation")
             return
         }
         val key: String = selectedTankstation.id
 
-        if(cacheManager.removeFromCacheFile(key)) {
-            showToast("Succesvol verwijderd")
+        if (cacheManager.removeFromCacheFile(key)) {
+            toastManager.showToast("Succesvol verwijderd")
         } else {
-            showToast("Fout tijdens verwijderen")
+            toastManager.showToast("Fout tijdens verwijderen")
         }
     }
-
-
-    private fun showToast(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-    }
-
 }

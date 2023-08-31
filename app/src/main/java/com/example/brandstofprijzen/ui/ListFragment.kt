@@ -21,7 +21,7 @@ import com.example.brandstofprijzen.apis.AnwbApiTankstationIds
 import com.example.brandstofprijzen.apis.AnwbApiTankstations
 import com.example.brandstofprijzen.model.Tankstation
 import com.example.brandstofprijzen.network.OkHttpClientApiClient
-import com.example.brandstofprijzen.util.CacheManager
+import com.example.brandstofprijzen.data.CacheManager
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -96,7 +96,7 @@ class ListFragment : Fragment() {
         val isFavoriteMode  = arguments?.getBoolean("favButtonPressed", false) == true
         scope.launch {
 
-            val tankstationIdsList: List<String> = if (localOnly) {
+            val tankstationIdsList = if (localOnly) {
                 tankStations.values.toList()
             } else if (isFavoriteMode ) {
                 println("favButtonPressed")
@@ -109,7 +109,7 @@ class ListFragment : Fragment() {
             if (tankstationIdsList.isEmpty()) {
                 val activity = requireActivity()
                 val intent = Intent(activity, MainActivity::class.java)
-                intent.putExtra("toastMessage", "Geen tankstations gevonden")
+                ToastManager(context).showToast("Geen tankstations gevonden")
                 activity.startActivity(intent)
                 return@launch
             }
@@ -127,7 +127,7 @@ class ListFragment : Fragment() {
             val gasStationsWithNonNullPrices = sortedGasStations.filter { gasStation -> gasStation.prijs[selectedFuel] != null }
 
             // Map the filtered list to create modified gas station objects
-            val modifiedGasStations  = gasStationsWithNonNullPrices.map { originalGasStation ->
+            val modifiedGasStations: List<Tankstation> = gasStationsWithNonNullPrices.map { originalGasStation ->
                 val selectedFuelPrice = originalGasStation.prijs[selectedFuel] ?: ""
                 Tankstation(
                     id = originalGasStation.id,
@@ -141,10 +141,10 @@ class ListFragment : Fragment() {
 
             // Update the adapter with the filtered data
             adapter.clear()
-            adapter.addAll(modifiedGasStations )
+            adapter.addAll(modifiedGasStations)
             adapter.notifyDataSetChanged()
 
-            updateBrandstofDetailsFragment(modifiedGasStations .firstOrNull())
+            updateBrandstofDetailsFragment(modifiedGasStations.first())
 
             val textColorOnbekend = ContextCompat.getColor(context, R.color.colorOnbekend)
             val textColorOrange = ContextCompat.getColor(context, R.color.colorOrange)
@@ -174,22 +174,22 @@ class ListFragment : Fragment() {
     private fun getSavedTankstationIds(context: Context): List<String> {
         val cacheManager = CacheManager(context)
         val ids = cacheManager.readFromCacheFile()
-        return ids.split("\n").dropLast(1)
+        return ids.split("\n").dropLast(1).distinct()
     }
 
-    private fun updateBrandstofDetailsFragment(selectedTankstation: Tankstation?) {
-        println("updateBrandstofDetailsFragment ${selectedTankstation?.id} | $selectedTankstation")
+    private fun updateBrandstofDetailsFragment(selectedTankstation: Tankstation) {
+        println("updateBrandstofDetailsFragment ${selectedTankstation.id} | $selectedTankstation")
 
         // Find the BrandstofDetailsFragment
         val fragment =
             requireActivity().supportFragmentManager.findFragmentById(R.id.brandstofDetailsFragment)
 
         // Check if the fragment is of type BrandstofDetailsFragment
-        if (fragment is BrandstofDetailsFragment && selectedTankstation != null) {
+        if (fragment is BrandstofDetailsFragment) {
             // Pass the selected tankstation and fuel type to the fragment
             fragment.fillInfo(selectedTankstation, selectedFuel)
         } else {
-            println("no fragment :(")
+            println("Where fragment?")
         }
     }
 }

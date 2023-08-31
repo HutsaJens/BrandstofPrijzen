@@ -43,18 +43,13 @@ class MainActivity : AppCompatActivity() {
             buttonPressed(spinner, isLocal = false, isFavButton = true)
         }
 
-        val toastMessage = intent.getStringExtra("toastMessage")
-        if (toastMessage != null) {
-            Toast.makeText(this, toastMessage, Toast.LENGTH_SHORT).show()
-        }
     }
 
     private fun buttonPressed(spinner: Spinner, isLocal: Boolean, isFavButton: Boolean) {
 
         val isConnected = hasNetworkConnection(applicationContext)
         if (!isConnected) {
-            Toast.makeText(this, "Maak A.U.B. verbinding met een netwerk", Toast.LENGTH_SHORT)
-                .show()
+            ToastManager(this).showToast("Maak A.U.B. verbinding met een netwerk")
             return
         }
 
