@@ -10,7 +10,6 @@ data class Tankstation(
     override fun toString(): String {
         return "$naam - ${locatie.locatie}: ${prijs.values.firstOrNull() ?: ""}"
     }
-
     fun toString(selectedFuel: String): String {
         return "$naam - ${locatie.locatie}: ${prijs[selectedFuel] ?: ""}"
     }
