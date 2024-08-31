@@ -11,7 +11,7 @@
 
     <string name="favButtonString">Opslaan</string>
     <string name="favButtonStringTwo">Verwijderen</string>
-
+    <string name="openen_in_maps">Openen in Maps</string>
 
 
 </resources>
