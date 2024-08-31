@@ -1,14 +1,16 @@
 package com.example.brandstofprijzen.ui
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.*
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import com.example.brandstofprijzen.R
-import com.example.brandstofprijzen.location.LocationHelper
-import com.example.brandstofprijzen.network.hasNetworkConnection
+import com.example.brandstofprijzen.application.LocationHelper
+import com.example.brandstofprijzen.application.PetrolCacheManager
+import com.example.brandstofprijzen.domain.ButtonType
+import com.example.brandstofprijzen.infrastructure.hasNetworkConnection
 
 
 class MainActivity : AppCompatActivity() {
@@ -18,34 +20,49 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
+        val cacheManager = PetrolCacheManager(this)
+        cacheManager.removeOutdatedEntries()
+
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         val spinner: Spinner = findViewById(R.id.spinner)
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, fuelTypeArray)
+
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinner.adapter = adapter
 
+        // set the default value of the spinner to the value in the cache if it exists, else set to the first value in the array
+        val sharedPref = getSharedPreferences("sharedPref", MODE_PRIVATE)
+        val selectedFuel = sharedPref.getString("selectedFuel", fuelTypeArray[0])
+
+        spinner.setSelection(adapter.getPosition(selectedFuel))
+
         val buttonSearchTankstation = findViewById<Button>(R.id.button_search_tankstation)
         buttonSearchTankstation.setOnClickListener {
-            buttonPressed(spinner, isLocal = false, isFavButton = false)
+            buttonPressed(spinner.selectedItem.toString(), ButtonType.SEARCH)
         }
 
         val buttonLocal = findViewById<Button>(R.id.button_local)
         buttonLocal.setOnClickListener {
-            buttonPressed(spinner, isLocal = true, isFavButton = false)
+            buttonPressed(spinner.selectedItem.toString(), ButtonType.LOCAL)
         }
 
         val buttonFav = findViewById<Button>(R.id.button_fav)
         buttonFav.setOnClickListener {
-            favButtonPressed()
-            buttonPressed(spinner, isLocal = false, isFavButton = true)
+            buttonPressed(spinner.selectedItem.toString(), ButtonType.FAV)
         }
 
     }
 
-    private fun buttonPressed(spinner: Spinner, isLocal: Boolean, isFavButton: Boolean) {
+    private fun buttonPressed(selectedFuel: String, buttonType: ButtonType) {
+
+        // cache the selectedFuel
+        val sharedPref = getSharedPreferences("sharedPref", MODE_PRIVATE)
+        val editor = sharedPref.edit()
+        editor.putString("selectedFuel", selectedFuel)
+        editor.apply()
 
         val isConnected = hasNetworkConnection(applicationContext)
         if (!isConnected) {
@@ -53,37 +70,24 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        val selectedFuel = spinner.selectedItem.toString()
+        val intent = Intent(this, PetrolActivity::class.java).apply {
+            putExtra("selectedFuel", selectedFuel)
+            putExtra("buttonType", buttonType.toString())
+        }
 
-        val intent = Intent(this, BrandstofActivity::class.java)
-        intent.putExtra("selectedFuel", selectedFuel)
-        intent.putExtra("local", isLocal)
-        intent.putExtra("favButtonPressed", isFavButton)
-
-        if (isLocal || isFavButton) {
-            startActivity(intent)
-        } else {
-            val locationHelper = LocationHelper(this)
-
-            // Call the getCurrentLocation function
-            locationHelper.getLastKnownLocation { latitude, longitude ->
-                Log.d("MainActivity", "Latitude: $latitude, Longitude: $longitude")
-
-                intent.putExtra("latitude", latitude)
-                intent.putExtra("longitude", longitude)
+        when (buttonType) {
+            ButtonType.LOCAL, ButtonType.FAV -> {
                 startActivity(intent)
             }
+            ButtonType.SEARCH -> {
+                val locationHelper = LocationHelper(this)
+                locationHelper.getLastKnownLocation { latitude, longitude ->
+                    Log.d("MainActivity", "Latitude: $latitude, Longitude: $longitude")
+                    intent.putExtra("latitude", latitude)
+                    intent.putExtra("longitude", longitude)
+                    startActivity(intent)
+                }
+            }
         }
-    }
-
-    private fun favButtonPressed() {
-//        println(getDistanceFromLatLonInKm(51.679135, 5.025626, 51.665323, 5.041896))
-
-//        val lifecycleScope = CoroutineScope(Dispatchers.Main)
-//        lifecycleScope.launch {
-//            val apiKey = scrapeAPIKey() ?: return@launch
-//
-//            println("New API key: $apiKey")
-//        }
     }
 }

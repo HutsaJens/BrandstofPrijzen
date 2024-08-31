@@ -1,6 +1,6 @@
 package com.example.brandstofprijzen.util
 
-import com.example.brandstofprijzen.model.Bounds
+import com.example.brandstofprijzen.domain.Bounds
 import kotlin.math.cos
 
 class BoundGenerator() {
@@ -17,7 +17,5 @@ class BoundGenerator() {
         val southWestLon = longitude - deltaLon
 
         return Bounds(northEastLat, northEastLon, southWestLat, southWestLon)
-
     }
-
 }

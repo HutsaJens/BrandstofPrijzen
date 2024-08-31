@@ -12,29 +12,30 @@ import android.view.ViewGroup
 
 import android.widget.ArrayAdapter
 import android.widget.ListView
-import android.widget.TextView
-import androidx.core.content.ContextCompat
 import com.example.brandstofprijzen.R
+import com.example.brandstofprijzen.application.PetrolCacheManager
 
-import com.example.brandstofprijzen.adapter.TankstationListAdapter
-import com.example.brandstofprijzen.apis.AnwbApiTankstationIds
-import com.example.brandstofprijzen.apis.AnwbApiTankstations
-import com.example.brandstofprijzen.model.Tankstation
-import com.example.brandstofprijzen.network.OkHttpClientApiClient
-import com.example.brandstofprijzen.data.CacheManager
+import com.example.brandstofprijzen.application.adapter.PetrolStationListAdapter
+import com.example.brandstofprijzen.application.adapter.PetrolStationListAdapterManager
+import com.example.brandstofprijzen.domain.PetrolStation
+import com.example.brandstofprijzen.infrastructure.httpclient.OkHttpClientApiClient
+import com.example.brandstofprijzen.infrastructure.CacheManager
+import com.example.brandstofprijzen.domain.ButtonType
+import com.example.brandstofprijzen.infrastructure.api.anwb.AnwbApiService
+import com.facebook.shimmer.ShimmerFrameLayout
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 class ListFragment : Fragment() {
 
     private lateinit var listView: ListView
-    private lateinit var adapter: ArrayAdapter<Tankstation>
-
-    private var selectedFuel: String = ""
+    private lateinit var shimmerLayout: ShimmerFrameLayout
+    private lateinit var adapter: ArrayAdapter<PetrolStation>
 
     private val tankStations = mapOf(
         "Argos - Sprang-Capelle" to "3430",
@@ -54,23 +55,24 @@ class ListFragment : Fragment() {
     ): View {
 
         // Retrieve the selected fuel string from the arguments bundle
-        selectedFuel = arguments?.getString("selectedFuel") ?: ""
+        val selectedFuel = arguments?.getString("selectedFuel") ?: ""
 
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_list, container, false)
         listView = view.findViewById(R.id.lvBrandstof)
+        shimmerLayout = view.findViewById(R.id.shimmerLayout)
 
         // Create a new instance of the custom adapter and set it as the adapter for the ListView
-        adapter = TankstationListAdapter(requireContext(), ArrayList(), selectedFuel)
+        adapter = PetrolStationListAdapter(requireContext(), ArrayList(), selectedFuel)
         listView.adapter = adapter
 
         // Set click listener for ListView items
         listView.setOnItemClickListener { parent, _, position, _ ->
             // Get the selected tankstation
-            val selectedTankstation = parent.getItemAtPosition(position) as Tankstation
+            val selectedPetrolStation = parent.getItemAtPosition(position) as PetrolStation
 
             // Update the BrandstofDetailsFragment with the selected tankstation
-            updateBrandstofDetailsFragment(selectedTankstation)
+            updateBrandstofDetailsFragment(selectedPetrolStation, selectedFuel)
         }
 
         // Load the ListView with data based on the selected fuel type
@@ -80,96 +82,79 @@ class ListFragment : Fragment() {
     }
 
     private fun fillListView(selectedFuel: String) {
-        val scope = CoroutineScope(Dispatchers.Main)
-
         val longitude = arguments?.getDouble("longitude") ?: 0.0
         val latitude = arguments?.getDouble("latitude") ?: 0.0
-        val localOnly = arguments?.getBoolean("local") ?: false
+        val buttonType = arguments?.getString("buttonType")?.let { enumValueOf<ButtonType>(it) }
 
-        val context = requireContext()
+        val anwbApiService = AnwbApiService(OkHttpClientApiClient(), requireContext())
+        val petrolCacheManager = PetrolCacheManager(requireContext())
 
-        val apiClient = OkHttpClientApiClient() // or any other implementation of the ApiClient interface
-        val anwbApiTankstationIds = AnwbApiTankstationIds(apiClient)
-        val anwbApiTankstations = AnwbApiTankstations(apiClient, context)
+        // Start shimmer animation
+        shimmerLayout.startShimmer()
+        shimmerLayout.visibility = View.VISIBLE
+        listView.visibility = View.GONE
 
-
-        val isFavoriteMode  = arguments?.getBoolean("favButtonPressed", false) == true
-        scope.launch {
-
-            val tankstationIdsList = if (localOnly) {
-                tankStations.values.toList()
-            } else if (isFavoriteMode ) {
-                println("favButtonPressed")
-                getSavedTankstationIds(context)
-            } else {
-                anwbApiTankstationIds.getTankstationIds(context, longitude, latitude, selectedFuel)
+        CoroutineScope(Dispatchers.IO).launch {
+            val tankstationIdsList = when (buttonType) {
+                ButtonType.LOCAL -> tankStations.values.toList()
+                ButtonType.FAV -> getSavedTankstationIds(requireContext())
+                else -> anwbApiService.getTankstationIds(longitude, latitude, selectedFuel)
             }
-            println("ListFragment - fillListView() | Tankstation list size: ${tankstationIdsList.size}")
 
             if (tankstationIdsList.isEmpty()) {
-                val activity = requireActivity()
-                val intent = Intent(activity, MainActivity::class.java)
-                ToastManager(context).showToast("Geen tankstations gevonden")
-                activity.startActivity(intent)
+                withContext(Dispatchers.Main) {
+                    ToastManager(requireContext()).showToast("Geen tankstations gevonden")
+                    startActivity(Intent(requireActivity(), MainActivity::class.java))
+                }
                 return@launch
             }
 
-            val tankstationList: List<Tankstation> =
-                anwbApiTankstations.parseFuelDataList(tankstationIdsList)
-
-            println("ListFragment - fillListView() | before sort")
-            val sortedGasStations = tankstationList.sortedBy {
-                it.prijs[selectedFuel]?.substring(1)?.toDoubleOrNull() ?: 0.0
-            }
-
-            println("ListFragment - fillListView() | Prijs: " + tankstationList[0].prijs[selectedFuel])
-            // Filter gas stations with non-null prices for the selected fuel type
-            val gasStationsWithNonNullPrices = sortedGasStations.filter { gasStation -> gasStation.prijs[selectedFuel] != null }
-
-            // Map the filtered list to create modified gas station objects
-            val modifiedGasStations: List<Tankstation> = gasStationsWithNonNullPrices.map { originalGasStation ->
-                val selectedFuelPrice = originalGasStation.prijs[selectedFuel] ?: ""
-                Tankstation(
+            val petrolStationList = tankstationIdsList.mapNotNull { petrolStationId ->
+                // Check cache first
+                val cachedPetrolStation = petrolCacheManager.getCachedPetrolStation(petrolStationId, selectedFuel)
+                if (cachedPetrolStation?.lastPriceChangeDates?.get(selectedFuel) == LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))) {
+                    cachedPetrolStation // Return cached data if still valid
+                } else {
+                    // Otherwise, fetch from API
+                    anwbApiService.parseFuelData(petrolStationId).also { fetchedPetrolStation ->
+                        // Cache the result if the date is today's date
+                        if (fetchedPetrolStation.lastPriceChangeDates[selectedFuel] == LocalDate.now().format(
+                                DateTimeFormatter.ofPattern("dd-MM-yyyy"))) {
+                            petrolCacheManager.savePetrolStation(fetchedPetrolStation, selectedFuel)
+                        }
+                    }
+                }
+            }.filter { petrolStation ->
+                petrolStation.prices[selectedFuel] != null
+            }.sortedBy {
+                it.prices[selectedFuel]?.substring(1)?.toDoubleOrNull() ?: Double.MAX_VALUE
+            }.map { originalGasStation ->
+                PetrolStation(
                     id = originalGasStation.id,
-                    naam = originalGasStation.naam,
-                    locatie = originalGasStation.locatie,
-                    checkDate = originalGasStation.checkDate,
-                    prijs = mapOf(selectedFuel to selectedFuelPrice)
+                    name = originalGasStation.name,
+                    location = originalGasStation.location,
+                    lastPriceChangeDates = originalGasStation.lastPriceChangeDates,
+                    prices = mapOf(selectedFuel to originalGasStation.prices[selectedFuel]!!)
                 )
             }
 
+            withContext(Dispatchers.Main) {
+                shimmerLayout.stopShimmer()
+                shimmerLayout.visibility = View.GONE
+                listView.visibility = View.VISIBLE
 
-            // Update the adapter with the filtered data
-            adapter.clear()
-            adapter.addAll(modifiedGasStations)
-            adapter.notifyDataSetChanged()
+                adapter.clear()
+                adapter.addAll(petrolStationList)
+                adapter.notifyDataSetChanged()
 
-            updateBrandstofDetailsFragment(modifiedGasStations.first())
-
-            val textColorOnbekend = ContextCompat.getColor(context, R.color.colorOnbekend)
-            val textColorOrange = ContextCompat.getColor(context, R.color.colorOrange)
-
-            for (i in 0 until listView.count) {
-                val item = adapter.getItem(i) ?: return@launch
-
-                // If it is price of the fuel is of todays date, continue
-                if (item.checkDate[selectedFuel] == LocalDate.now().toString()) {
-                    continue
+                if (petrolStationList.isNotEmpty()) {
+                    updateBrandstofDetailsFragment(petrolStationList.first(), selectedFuel)
                 }
 
-                val textColor = if (item.checkDate[selectedFuel] == "Onbekend") {
-                    textColorOnbekend
-                } else {
-                    textColorOrange
-                }
-
-                val textView = listView.getChildAt(i - listView.firstVisiblePosition)
-                    ?.findViewById<TextView>(android.R.id.text1)
-                textView?.setTextColor(textColor)
+                PetrolStationListAdapterManager().updatePetrolStationsColor(listView, adapter, selectedFuel, requireContext())
             }
         }
     }
-
 
     private fun getSavedTankstationIds(context: Context): List<String> {
         val cacheManager = CacheManager(context)
@@ -177,17 +162,16 @@ class ListFragment : Fragment() {
         return ids.split("\n").dropLast(1).distinct()
     }
 
-    private fun updateBrandstofDetailsFragment(selectedTankstation: Tankstation) {
-        println("updateBrandstofDetailsFragment ${selectedTankstation.id} | $selectedTankstation")
+    private fun updateBrandstofDetailsFragment(selectedPetrolStation: PetrolStation, selectedFuel: String) {
 
         // Find the BrandstofDetailsFragment
         val fragment =
             requireActivity().supportFragmentManager.findFragmentById(R.id.brandstofDetailsFragment)
 
         // Check if the fragment is of type BrandstofDetailsFragment
-        if (fragment is BrandstofDetailsFragment) {
+        if (fragment is PetrolDetailsFragment) {
             // Pass the selected tankstation and fuel type to the fragment
-            fragment.fillInfo(selectedTankstation, selectedFuel)
+            fragment.fillInfo(selectedPetrolStation, selectedFuel)
         } else {
             println("Where fragment?")
         }

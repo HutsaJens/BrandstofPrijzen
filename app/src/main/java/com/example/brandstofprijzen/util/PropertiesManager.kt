@@ -6,7 +6,6 @@ import java.util.*
 
 private const val CONFIG = "config.properties"
 private const val APIKEY = "api.key"
-private const val GEONAMES = "geonames.username"
 
 
 fun getApiKey(context: Context): String {
