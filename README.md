@@ -6,8 +6,6 @@ This is an Android application developed in Kotlin that helps users find the lat
 
 - Fetches latest fuel prices from various petrol stations
 - Provides location-based services to find nearby petrol stations
-- Caches petrol station data for offline use
-- Uses Facebook's Shimmer library for a loading effect
 
 ## Getting Started
 
@@ -36,6 +34,3 @@ These instructions will get you a copy of the project up and running on your loc
 
 Please read [CONTRIBUTING.md](https://github.com/HutsaJens/brandstofprijzen/blob/main/CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](https://github.com/HutsaJens/brandstofprijzen/blob/main/LICENSE.md) file for details
