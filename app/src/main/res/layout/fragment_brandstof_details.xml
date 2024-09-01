@@ -17,6 +17,7 @@
             android:layout_width="75dp"
             android:layout_height="wrap_content"
             android:text="Naam: "
+            android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textSize="20sp" />
 
         <TextView
@@ -24,6 +25,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="20sp"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
             android:layout_toEndOf="@+id/labelNaam" />
 
         <TextView
@@ -32,6 +34,7 @@
             android:layout_height="wrap_content"
             android:textSize="20sp"
             android:layout_below="@+id/labelNaam"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
             android:text="Adres: " />
 
         <TextView
@@ -40,6 +43,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/tvNaam"
             android:textSize="20sp"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
             android:layout_toEndOf="@+id/labelAdres" />
 
         <TextView
@@ -48,6 +52,7 @@
             android:layout_height="wrap_content"
             android:textSize="20sp"
             android:layout_below="@+id/labelAdres"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
             android:text="Locatie: " />
 
         <TextView
@@ -56,6 +61,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/tvAdres"
             android:textSize="20sp"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
             android:layout_toEndOf="@+id/labelLocatie" />
 
 
@@ -65,6 +71,7 @@
             android:layout_height="wrap_content"
             android:textSize="20sp"
             android:layout_below="@+id/labelLocatie"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
             android:text="Prijs: " />
 
         <TextView
@@ -73,6 +80,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/tvLocatie"
             android:textSize="20sp"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
             android:layout_toEndOf="@+id/labelPrijs" />
 
         <TextView
@@ -81,6 +89,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/labelPrijs"
             android:textSize="20sp"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
             android:text="Laatst Bijgewerkt: " />
 
         <TextView
@@ -89,6 +98,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/tvPrijs"
             android:textSize="20sp"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
             android:layout_toEndOf="@+id/labelDate" />
 
     </RelativeLayout>

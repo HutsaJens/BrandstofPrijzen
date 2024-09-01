@@ -28,6 +28,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
             android:text="@string/favButtonString" />
 
         <Space
@@ -40,6 +41,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
             android:text="@string/openen_in_maps" />
     </LinearLayout>
 

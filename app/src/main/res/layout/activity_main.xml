@@ -16,6 +16,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.5"
+        android:textAppearance="?attr/textAppearanceBodyLarge"
         tools:ignore="DuplicateSpeakableTextCheck" />
 
     <Button
@@ -26,6 +27,7 @@
         app:layout_constraintEnd_toEndOf="@+id/button_search_tankstation"
         app:layout_constraintStart_toStartOf="@+id/button_search_tankstation"
         app:layout_constraintTop_toBottomOf="@+id/button_search_tankstation"
+        android:textAppearance="?attr/textAppearanceBodyLarge"
         tools:ignore="DuplicateSpeakableTextCheck" />
 
     <Spinner
@@ -33,6 +35,7 @@
         android:layout_width="250dp"
         android:layout_height="53dp"
         android:contentDescription="@string/zoek_tankstations"
+        android:textAppearance="?attr/textAppearanceBodyLarge"
         app:layout_constraintBottom_toTopOf="@+id/button_search_tankstation"
         app:layout_constraintEnd_toEndOf="@+id/button_search_tankstation" />
 
@@ -44,6 +47,7 @@
         android:text="Favorieten"
         app:layout_constraintEnd_toEndOf="@+id/button_local"
         app:layout_constraintHorizontal_bias="0.0"
+        android:textAppearance="?attr/textAppearanceBodyLarge"
         app:layout_constraintStart_toStartOf="@+id/button_local"
         app:layout_constraintTop_toBottomOf="@+id/button_local" />
 

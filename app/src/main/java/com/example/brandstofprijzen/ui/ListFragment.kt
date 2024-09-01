@@ -89,6 +89,9 @@ class ListFragment : Fragment() {
         val anwbApiService = AnwbApiService(OkHttpClientApiClient(), requireContext())
         val petrolCacheManager = PetrolCacheManager(requireContext())
 
+        // A list to hold valid petrol stations
+        val petrolStationList = mutableListOf<PetrolStation>()
+
         // Start shimmer animation
         shimmerLayout.startShimmer()
         shimmerLayout.visibility = View.VISIBLE
@@ -109,50 +112,59 @@ class ListFragment : Fragment() {
                 return@launch
             }
 
-            val petrolStationList = tankstationIdsList.mapNotNull { petrolStationId ->
-                // Check cache first
-                val cachedPetrolStation = petrolCacheManager.getCachedPetrolStation(petrolStationId, selectedFuel)
-                if (cachedPetrolStation?.lastPriceChangeDates?.get(selectedFuel) == LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))) {
-                    cachedPetrolStation // Return cached data if still valid
-                } else {
-                    // Otherwise, fetch from API
-                    anwbApiService.parseFuelData(petrolStationId).also { fetchedPetrolStation ->
-                        // Cache the result if the date is today's date
-                        if (fetchedPetrolStation.lastPriceChangeDates[selectedFuel] == LocalDate.now().format(
-                                DateTimeFormatter.ofPattern("dd-MM-yyyy"))) {
-                            petrolCacheManager.savePetrolStation(fetchedPetrolStation, selectedFuel)
-                        }
-                    }
-                }
-            }.filter { petrolStation ->
-                petrolStation.prices[selectedFuel] != null
-            }.sortedBy {
-                it.prices[selectedFuel]?.substring(1)?.toDoubleOrNull() ?: Double.MAX_VALUE
-            }.map { originalGasStation ->
-                PetrolStation(
-                    id = originalGasStation.id,
-                    name = originalGasStation.name,
-                    location = originalGasStation.location,
-                    lastPriceChangeDates = originalGasStation.lastPriceChangeDates,
-                    prices = mapOf(selectedFuel to originalGasStation.prices[selectedFuel]!!)
-                )
-            }
-
             withContext(Dispatchers.Main) {
                 shimmerLayout.stopShimmer()
                 shimmerLayout.visibility = View.GONE
                 listView.visibility = View.VISIBLE
-
-                adapter.clear()
-                adapter.addAll(petrolStationList)
-                adapter.notifyDataSetChanged()
-
-                if (petrolStationList.isNotEmpty()) {
-                    updateBrandstofDetailsFragment(petrolStationList.first(), selectedFuel)
-                }
-
-                PetrolStationListAdapterManager().updatePetrolStationsColor(listView, adapter, selectedFuel, requireContext())
             }
+
+            tankstationIdsList.forEach { petrolStationId ->
+                val petrolStation =
+                    petrolCacheManager.getCachedPetrolStation(petrolStationId, selectedFuel)
+                        ?.takeIf {
+                            it.lastPriceChangeDates[selectedFuel] == LocalDate.now()
+                                .format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+                        } ?: anwbApiService.parseFuelData(petrolStationId).also {
+                        if (it.lastPriceChangeDates[selectedFuel] == LocalDate.now()
+                                .format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+                        ) {
+                            petrolCacheManager.savePetrolStation(it, selectedFuel)
+                        }
+                    }
+
+                petrolStation.let {
+                    // Add to the list if the price is not null
+                    if (it.prices[selectedFuel] != null) {
+                        petrolStationList.add(it)
+
+                        // Sort the list by price after adding each valid petrol station
+                        petrolStationList.sortBy { station ->
+                            station.prices[selectedFuel]?.substring(1)?.toDoubleOrNull()
+                                ?: Double.MAX_VALUE
+                        }
+
+                        // Update the adapter with the filtered and sorted data
+                        withContext(Dispatchers.Main) {
+                            adapter.clear()
+                            adapter.addAll(petrolStationList)
+                            adapter.notifyDataSetChanged()
+
+                            // get the first item in the list and update the BrandstofDetailsFragment
+                            if (adapter.count > 0) {
+                                updateBrandstofDetailsFragment(adapter.getItem(0)!!, selectedFuel)
+                            }
+
+                            PetrolStationListAdapterManager().updatePetrolStationsColor(
+                                listView,
+                                adapter,
+                                selectedFuel,
+                                requireContext()
+                            )
+                        }
+                    }
+                }
+            }
+
         }
     }
 
