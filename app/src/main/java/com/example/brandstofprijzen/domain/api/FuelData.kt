@@ -11,7 +11,8 @@ data class FuelData(
     @Json(name = "name") val name: String?,
     @Json(name = "address") val address: AddressData?,
     @Json(name = "geo") val geo: GeoData?,
-    @Json(name = "fuels") val fuels: List<FuelItemData>?
+    @Json(name = "fuels") val fuels: List<FuelItemData>?,
+    @Json(name = "lastImportedTimestamp") val lastImportedTimestamp: String?
 ) {
     fun getShowName(): String {
         return if (!displayName.isNullOrBlank()) {
@@ -45,6 +46,10 @@ data class FuelData(
             val fuelType = fuelItem.name ?: ""
             val priceValue = fuelItem.price?.value ?: return emptyMap()
 
+            if(priceValue == "0") {
+                return emptyMap()
+            }
+
             // Format the price value as Euro currency if it is not "null" and has at least two characters.
             // Otherwise, return the original value as is.
             val formattedValue = if (priceValue.length == 3) {
@@ -66,12 +71,12 @@ data class FuelData(
         // If fuels is null, return an empty map.
         return fuels?.associate { fuelItem ->
             val fuelType = fuelItem.name ?: ""
-            val recordDate = fuelItem.recordDate ?: ""
+            val recordDate = lastImportedTimestamp ?: ""
 
             // If the record date is not blank, parse it to a LocalDate object and format it as "dd-MM-yyyy".
             // Otherwise, use "Onbekend" as the value for the fuel type in the map.
             if (recordDate.isNotBlank()) {
-                val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ")
                 val date = LocalDate.parse(recordDate, formatter)
                 fuelType to date.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
             } else {

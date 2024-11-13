@@ -11,8 +11,6 @@ import com.example.brandstofprijzen.util.getApiKey
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.URLEncoder
@@ -21,7 +19,6 @@ class AnwbApiService(private val apiClient: ApiClient, context: Context) {
 
 
     private var apiKey : String = ""
-    private val context = context
     private val fuelTypes = mapOf(
         "Diesel (B7)" to "diesel",
         "Euro 95 (E10)" to "euro95",
@@ -76,22 +73,11 @@ class AnwbApiService(private val apiClient: ApiClient, context: Context) {
         }
     }
 
-    suspend fun parseFuelDataList(identifiers: List<String>): List<PetrolStation> =
-        withContext(Dispatchers.IO) {
-            // Create a list of Deferred<Tankstation> to represent the async tasks
-            val deferredList = identifiers.map { identifier ->
-                async { parseFuelData(identifier) }
-            }
-
-            // Wait for all the async tasks to complete and retrieve the results
-            deferredList.awaitAll()
-        }
-
     suspend fun parseFuelData(identifier: String): PetrolStation =
         withContext(Dispatchers.IO) {
 
-            // Make Request
-            val response = apiClient.makeApiRequest(generateUrlForFuelData(identifier))
+            val url = generateUrlForFuelData(identifier)
+            val response = apiClient.makeApiRequest(url)
 
             val moshi = Moshi.Builder()
                 .addLast(KotlinJsonAdapterFactory())
